@@ -10,8 +10,8 @@ Structure :
 - Main MPI : main_mpi.cpp
 
 Lancer :
-
-mpirun -np 6 ./main_mpi monGraphe.dot
+séquentiel : ./main ../Exemple2.dot
+parallel : mpirun -np 6 ./main_mpi ../Exemple2.dot
 
 Étapes :
 1. Rank 0 lit le graphe (.dot).

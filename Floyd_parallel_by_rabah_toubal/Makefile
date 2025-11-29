@@ -9,8 +9,8 @@ LIBS = -lcgraph
 SRC = main_mpi.cpp \
       ForGraphMPI.cpp \
       Distribution.cpp \
-      ParallelFW.cpp \
-      Utils.cpp
+      ParallelFWBlocks.cpp\
+      Utils.cpp\
 
 OBJ = $(SRC:.cpp=.o)
 

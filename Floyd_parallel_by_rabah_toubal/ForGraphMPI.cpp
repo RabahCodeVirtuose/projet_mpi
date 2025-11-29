@@ -1,4 +1,7 @@
+#define OMPI_SKIP_MPICXX 1
 #include "ForGraphMPI.hpp"
+
+using namespace std;
 
 int* lectureGrapheMPI(char* f, int* nb_nodes, map<string,int>* my_nodes) {
 
@@ -8,12 +11,16 @@ int* lectureGrapheMPI(char* f, int* nb_nodes, map<string,int>* my_nodes) {
         exit(1);
     }
 
+
+
+
+    
     Agraph_t *g = agread(fp, NULL);
     fclose(fp);
 
     int nn = agnnodes(g);
     (*nb_nodes) = nn;
-
+    
     int t = 0;
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
         (*my_nodes)[agnameof(n)] = t;
@@ -26,7 +33,7 @@ int* lectureGrapheMPI(char* f, int* nb_nodes, map<string,int>* my_nodes) {
         int i = (*my_nodes)[agnameof(n)];
         for (Agedge_t *e = agfstout(g, n); e; e = agnxtout(g, e)) {
             int j = (*my_nodes)[agnameof(aghead(e))];
-            int w = stoi(agget(e, (char*)"weight"));
+            int w = std::stoi(agget(e, (char*)"weight"));
             mat[i*nn + j] = w;
             mat[j*nn + i] = w;
         }

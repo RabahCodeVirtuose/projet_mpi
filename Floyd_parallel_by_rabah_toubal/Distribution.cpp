@@ -1,3 +1,4 @@
+#define OMPI_SKIP_MPICXX 1
 #include "Distribution.hpp"
 
 int ownerOf(int bi, int bj, int Pr, int Pc) {
@@ -20,6 +21,8 @@ std::vector<BlockInfo> computeLocalBlocks(int nb_nodes, int b, int Pr, int Pc, i
                 info.bi = bi;
                 info.bj = bj;
                 info.owner = own;
+
+
                 info.offset_i = bi * b;
                 info.offset_j = bj * b;
                 list.push_back(info);
