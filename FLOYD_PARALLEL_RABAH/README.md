@@ -114,15 +114,9 @@ Le rang 0 affiche aussi le **temps d’exécution de la partie parallèle** (ent
 
 ---
 
-## 7. Remarques techniques
 
-* Si le nombre de processus n’est **pas un carré parfait**, la grille de processus est ajustée automatiquement avec `MPI_Dims_create`.
-* Si `n` n’est pas un multiple de la taille de bloc `b`, les cases qui dépassent sont remplies avec **INF** (padding), ce qui n’affecte pas les chemins réels.
-* L’algorithme utilise des **diffusions (broadcast) de blocs** pour mettre à jour les lignes / colonnes et les blocs internes.
 
----
-
-## 8. Nettoyage
+## 7. Nettoyage
 
 Pour supprimer les fichiers objets et recompiler proprement :
 
