@@ -79,16 +79,6 @@ run: all
 	@echo "  Matrice  : $(DIST_FILE)"
 	@echo "  PAM out  : $(PAM_OUT)"
 
-# Si tu veux pouvoir lancer chaque étape séparément :
-
-run-seq: seq
-	cd $(SEQ_DIR) && mpirun -np $(NP_SEQ) ./$(SEQ_EXE) ../../$(FASTA)
-
-run-floyd: floyd
-	cd $(FLOYD_DIR) && mpirun -np $(NP_FLOYD) ./$(FLOYD_EXE) ../../$(DOT_FILE)
-
-run-pam: pam
-	cd $(PAM_DIR) && mpirun -np $(NP_PAM) ./$(PAM_EXE) ../../$(DIST_FILE)
 
 # ============================
 # 3) Nettoyage global
