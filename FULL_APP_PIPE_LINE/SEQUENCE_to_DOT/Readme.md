@@ -1,7 +1,3 @@
-Voilà un README simple pour le dossier **SEQUENCE_to_DOT** (BuildMatrixMPI.cpp).
-
----
-
 # Construction de la matrice de distances / fichier DOT (MPI)
 
 ## 1. Description rapide
