@@ -23,3 +23,19 @@ parallel : mpirun -np 6 ./main_mpi ../Exemple2.dot
    - Phase B : ligne k + colonne k
    - Phase C : mise à jour restante
 6. Recomposition finale sur rank 0.
+
+
+
+
+
+création de la matrice d'adjacence : 
+mpirun -np 4 ./build_dot ../../DATA/dataset_2000seq.fa
+
+
+./main ../DATA/Exemple2.dot
+   mpirun -np 3 ./main_mpi ../../DATA/Resulat_sequence_by_premier_algo.dot
+
+mpirun -np 6 ./pam_mpi ../../DATA/matrice_finale_sortie_de_floyd_warshal.txt
+
+
+./pam
