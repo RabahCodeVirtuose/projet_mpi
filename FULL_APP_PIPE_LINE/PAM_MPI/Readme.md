@@ -1,5 +1,5 @@
 
-# Version MPI de l’algorithme PAM (k-médoines)
+# Version MPI de l’algorithme PAM (k-médoides)
 
 ## 1. Description rapide
 
