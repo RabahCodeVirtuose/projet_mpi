@@ -1,48 +1,49 @@
--
 
-#  Version Parallèle de Floyd-Warshall (MPI)
+
+# Version Parallèle de Floyd-Warshall (MPI)
 
 ## 1. Description rapide
 
 Ce dossier contient **ma version parallèle** de l’algorithme de Floyd-Warshall, écrite en C++ avec **MPI**.
-L’idée générale est la même que l’algo séquentiel : on cherche les plus courts chemins entre tous les sommets.
-Sauf qu’ici, **la matrice est découpée en blocs**, et chaque processus s’occupe d’une partie différente.
+L’idée reste la même que pour la version séquentielle : on veut les plus courts chemins entre tous les sommets.
+La différence est que **la grande matrice est divisée en blocs**, et chaque processus traite les blocs dont il est responsable.
 
-À chaque itération `k`, le bloc pivot est envoyé aux autres processus (via `MPI_Bcast` ou `MPI_Ibcast`), et chacun met à jour ses blocs locaux. C’est exactement ce qu’on a vu en cours sur la **parallélisation par blocs**.
+À chaque itération `k`, le bloc pivot est transmis aux autres processus (`MPI_Bcast` ou `MPI_Ibcast`), ce qui leur permet de mettre à jour leurs blocs locaux.
+C’est la méthode classique de **parallélisation 2D par blocs**, comme vue en TP.
 
-Je ne suis pas allé chercher quelque chose d’extra : j’ai juste appliqué la méthode classique avec une grille de processus et une mise à jour bloc-par-bloc.
+📌 **Référence consultée**
+Pendant la réalisation, j’ai aussi regardé un document externe qui explique une approche proche (découpage 2D, broadcasts, etc.).
+Cela m’a aidé à organiser mon code.
 
- **Inspiration utilisée**
-En travaillant dessus, j’ai aussi regardé un document universitaire qui décrit la même stratégie (découpage 2D, broadcasts, mises à jour locales). Ça m’a aidé à comprendre le schéma global.
-Référence : Asmita Gautam, *Parallel Floyd-Warshall Algorithm*, University at Buffalo, 2019.
+> Asmita Gautam, *Parallel Floyd-Warshall Algorithm*, University at Buffalo, 2019.
 
 ---
 
 ## 2. Fichiers importants
 
-* **`main_mpi.cpp`** → programme principal (lecture, distribution, lancer l’algo)
-* **`ParallelFWBlocks.cpp / .hpp`** → cœur de l’algorithme (version blocs)
-* **`Distribution.cpp`** → répartit chaque bloc à son processus
-* **`Utils.cpp`** → outils : affichage, écriture fichier…
-* **`Makefile`** → compilation automatique
+* **`main_mpi.cpp`** – programme principal
+* **`ParallelFWBlocks.cpp` / `.hpp`** – implémentation de Floyd-Warshall par blocs
+* **`Distribution.cpp`** – répartition des blocs entre les processus
+* **`Utils.cpp`** – affichage, écriture dans un fichier, etc.
+* **`Makefile`** – compilation automatique
 
 ---
 
 ## 3. Compilation
 
-Place-toi simplement dans le dossier :
+Se placer dans le dossier :
 
 ```
 FLOYD_PARALLEL_RABAH/
 ```
 
-Puis lance :
+Puis compiler :
 
 ```
 make
 ```
 
-Ça génère l’exécutable :
+Un exécutable apparaît :
 
 ```
 ./main_mpi
@@ -52,51 +53,49 @@ make
 
 ## 4. Exécution
 
-Le programme prend en entrée un fichier contenant **la matrice d’adjacence**.
+Le programme attend un fichier contenant **une matrice d’adjacence**.
 
-Pour le lancer :
+Commande générale :
 
 ```
 mpirun -np <nb_processus> ./main_mpi <chemin_fichier_matrice>
 ```
 
-Exemple simple :
+Exemples :
 
 ```
 mpirun -np 4 ./main_mpi ../../DATA/PetitExemple.dot
 ```
 
-Ou pour un plus gros fichier :
-
 ```
 mpirun -np 9 ./main_mpi ../../DATA/exemplemassi.dot
 ```
 
-> ⚠️ Les fichiers d’entrée sont dans le dossier `DATA` à la racine.
+> Les fichiers d’entrée se trouvent dans le dossier `DATA`.
 
 ---
 
 ## 5. Sortie du programme
 
-À la fin, le programme :
+Le programme :
 
 * calcule la matrice des plus courts chemins,
-* rassemble le résultat sur le **rang 0**,
-* écrit la matrice finale dans :
+* rassemble tout sur le **rang 0**,
+* écrit le résultat dans :
 
 ```
 DATA/matrice_finale_sortie_de_floyd_warshal.txt
 ```
 
-Le rang 0 affiche aussi le **temps total d’exécution**.
+Le rang 0 affiche aussi le **temps d’exécution MPI**.
 
 ---
 
 ## 6. Remarques utiles
 
-* Si le nombre de processus n’est **pas carré**, le programme adapte automatiquement la grille avec `MPI_Dims_create`.
-* Si la taille n’est **pas divisible par la taille des blocs**, les cases “en trop” sont remplies avec **INF** (c’est juste du padding, ça ne gêne pas les calculs).
-* La version utilise des **communications non bloquantes** pour accélérer la propagation des blocs (ça évite que tout le monde attende).
+* Si le nombre de processus n’est **pas un carré**, la grille est adaptée automatiquement (`MPI_Dims_create`).
+* Si la taille de la matrice n’est **pas un multiple de la taille des blocs**, les endroits “qui dépassent” sont remplis avec **INF** (padding).
+* Des **communications non bloquantes** sont utilisées pour éviter que les processus attendent inutilement.
 
 ---
 
@@ -111,11 +110,11 @@ mpirun -np 4 ./main_mpi ../../DATA/PetitExemple.dot
 
 ## 8. Nettoyage
 
-Pour supprimer les `.o` et repartir propre :
+Pour repartir propre :
 
 ```
 make clean
 ```
 
----
+
 
