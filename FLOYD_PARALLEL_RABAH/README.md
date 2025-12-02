@@ -2,7 +2,7 @@
 
 ## 1. Description rapide
 
-Ce dossier contient **ma version parallèle** de l’algorithme de Floyd-Warshall, écrite en C++ avec **MPI**.
+Ce dossier contient **ma version parallèle** de l’algorithme de Floyd-Warshall.
 
 Le programme ne lit pas directement une matrice d’adjacence :
  il lit un **graphe pondéré au format Graphviz `.dot`**,
@@ -92,7 +92,7 @@ mpirun -np 4 ./main_mpi ../DATA/PetitExemple.dot
 Ou avec un autre graphe :
 
 ```bash
-mpirun -np 4 ./main_mpi ../DATA/exemplemassi.dot
+mpirun -np 4 ./main_mpi ../DATA/Resulat_sequence_by_premier_algo.dot
 ```
 
 ---
