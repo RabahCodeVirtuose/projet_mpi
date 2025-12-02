@@ -1,118 +1,132 @@
-
-
 # Version Parallèle de Floyd-Warshall (MPI)
 
 ## 1. Description rapide
 
 Ce dossier contient **ma version parallèle** de l’algorithme de Floyd-Warshall, écrite en C++ avec **MPI**.
-L’idée reste la même que pour la version séquentielle : on veut les plus courts chemins entre tous les sommets.
-La différence est que **la grande matrice est divisée en blocs**, et chaque processus traite les blocs dont il est responsable.
 
-À chaque itération `k`, le bloc pivot est transmis aux autres processus (`MPI_Bcast` ou `MPI_Ibcast`), ce qui leur permet de mettre à jour leurs blocs locaux.
-C’est la méthode classique de **parallélisation 2D par blocs**, comme vue en TP.
+Le programme ne lit pas directement une matrice d’adjacence :
+ il lit un **graphe pondéré au format Graphviz `.dot`**,
+puis construit la matrice d’adjacence en mémoire avant de lancer Floyd-Warshall par blocs.
+
+La grande matrice est découpée en **blocs**, et chaque processus s’occupe de certains blocs.
+À chaque itération, le bloc pivot est diffusé aux autres processus pour mettre à jour les distances.
 
 📌 **Référence consultée**
-Pendant la réalisation, j’ai aussi regardé un document externe qui explique une approche proche (découpage 2D, broadcasts, etc.).
-Cela m’a aidé à organiser mon code.
-
-> Asmita Gautam, *Parallel Floyd-Warshall Algorithm*, University at Buffalo, 2019.
+Asmita Gautam, *Parallel Floyd-Warshall Algorithm*, University at Buffalo, 2019.
 
 ---
 
 ## 2. Fichiers importants
 
-* **`main_mpi.cpp`** – programme principal
-* **`ParallelFWBlocks.cpp` / `.hpp`** – implémentation de Floyd-Warshall par blocs
-* **`Distribution.cpp`** – répartition des blocs entre les processus
-* **`Utils.cpp`** – affichage, écriture dans un fichier, etc.
-* **`Makefile`** – compilation automatique
+* **`main_mpi.cpp`** – point d’entrée MPI :
+  lit le fichier `.dot`, construit la matrice d’adjacence, appelle `ParallelFloydWarshallBlocks`.
+* **`ForGraphMPI.cpp / .hpp`** – lecture du fichier DOT avec Graphviz (CGraph)
+  → transforme le graphe en matrice d’adjacence (non orientée, pondérée).
+* **`ParallelFWBlocks.cpp / .hpp`** – implémentation de Floyd-Warshall par blocs (version parallèle).
+* **`Distribution.cpp / .hpp`** – répartition des blocs entre les processus MPI.
+* **`Utils.cpp / .hpp`** – fonctions utilitaires (affichage, écriture dans un fichier texte).
+* **`Makefile`** – script de compilation.
 
 ---
 
 ## 3. Compilation
 
-Se placer dans le dossier :
+Depuis le dossier :
 
-```
-FLOYD_PARALLEL_RABAH/
-```
-
-Puis compiler :
-
-```
+```bash
+cd FLOYD_PARALLEL_RABAH
 make
 ```
 
-Un exécutable apparaît :
+Ça produit un exécutable :
 
-```
+```bash
 ./main_mpi
 ```
 
 ---
 
-## 4. Exécution
+## 4. Format du fichier d’entrée (`.dot`)
 
-Le programme attend un fichier contenant **une matrice d’adjacence**.
+Le programme attend un **fichier DOT Graphviz** décrivant un graphe pondéré non orienté, par exemple :
+
+```dot
+graph graphe_pondere {
+    node [shape=circle, style=filled, color=lightyellow, fontcolor=black];
+    edge [color=black, fontcolor=blue];
+
+    A [label="A"];
+    B [label="B"];
+    C [label="C"];
+
+    A -- B [label="5", weight=5];
+    A -- C [label="2", weight=2];
+    B -- C [label="3", weight=3];
+}
+```
+
+`ForGraphMPI.cpp` parcourt ce fichier, numérote les sommets (0, 1, 2, …) et construit une matrice d’adjacence `nb_nodes × nb_nodes` avec les poids, puis on applique Floyd-Warshall sur cette matrice.
+
+Les fichiers `.dot` d’exemple sont dans le dossier :
+
+```bash
+../DATA
+```
+
+---
+
+## 5. Exécution
 
 Commande générale :
 
-```
-mpirun -np <nb_processus> ./main_mpi <chemin_fichier_matrice>
-```
-
-Exemples :
-
-```
-mpirun -np 4 ./main_mpi ../../DATA/PetitExemple.dot
+```bash
+mpirun -np <nb_processus> ./main_mpi <chemin_fichier_dot>
 ```
 
-```
-mpirun -np 9 ./main_mpi ../../DATA/exemplemassi.dot
+Exemple :
+
+```bash
+mpirun -np 4 ./main_mpi ../DATA/PetitExemple.dot
 ```
 
-> Les fichiers d’entrée se trouvent dans le dossier `DATA`.
+Ou avec un autre graphe :
+
+```bash
+mpirun -np 4 ./main_mpi ../DATA/exemplemassi.dot
+```
 
 ---
 
-## 5. Sortie du programme
+## 6. Sortie du programme
 
-Le programme :
+À la fin du calcul, le **rang 0** :
 
-* calcule la matrice des plus courts chemins,
-* rassemble tout sur le **rang 0**,
-* écrit le résultat dans :
+* récupère la matrice finale des plus courts chemins,
+* l’écrit dans un fichier texte :
 
+```bash
+../DATA/matrice_finale_sortie_de_floyd_warshal.txt
 ```
-DATA/matrice_finale_sortie_de_floyd_warshal.txt
-```
 
-Le rang 0 affiche aussi le **temps d’exécution MPI**.
+Ce fichier sera ensuite utilisé comme entrée pour l’algorithme de PAM.
+
+Le rang 0 affiche aussi le **temps d’exécution de la partie parallèle** (entre les deux `MPI_Barrier` dans `main_mpi.cpp`).
 
 ---
 
-## 6. Remarques utiles
+## 7. Remarques techniques
 
-* Si le nombre de processus n’est **pas un carré**, la grille est adaptée automatiquement (`MPI_Dims_create`).
-* Si la taille de la matrice n’est **pas un multiple de la taille des blocs**, les endroits “qui dépassent” sont remplis avec **INF** (padding).
-* Des **communications non bloquantes** sont utilisées pour éviter que les processus attendent inutilement.
-
----
-
-## 7. Exemple complet
-
-```
-make
-mpirun -np 4 ./main_mpi ../../DATA/PetitExemple.dot
-```
+* Si le nombre de processus n’est **pas un carré parfait**, la grille de processus est ajustée automatiquement avec `MPI_Dims_create`.
+* Si `n` n’est pas un multiple de la taille de bloc `b`, les cases qui dépassent sont remplies avec **INF** (padding), ce qui n’affecte pas les chemins réels.
+* L’algorithme utilise des **diffusions (broadcast) de blocs** pour mettre à jour les lignes / colonnes et les blocs internes.
 
 ---
 
 ## 8. Nettoyage
 
-Pour repartir propre :
+Pour supprimer les fichiers objets et recompiler proprement :
 
-```
+```bash
 make clean
 ```
 
