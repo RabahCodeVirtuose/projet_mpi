@@ -179,7 +179,7 @@ L’usage de `MPI_Ibcast` permet de recouvrir une partie des communications avec
 ### Rassemblement du résultat
 
 À la fin des itérations, chaque processus possède la version finale des blocs dont il est responsable.
-Le rang 0 récupère ces blocs un par un (en utilisant `MPI_Send` / `MPI_Recv`) et reconstruit la matrice complète des distances (n \times n).
+Le rang 0 récupère ces blocs un par un (en utilisant `MPI_Send` / `MPI_Recv`) et reconstruit la matrice complète des distances (n * n).
 Cette matrice est ensuite utilisée comme entrée de l’algorithme PAM pour la phase de clustering.
 
 
