@@ -133,7 +133,7 @@ make clean
 L’algorithme de Floyd–Warshall calcule les plus courts chemins entre tous les couples de sommets en appliquant la relation :
 
 [
-D[i][j] = \min\bigl(D[i][j],, D[i][k] + D[k][j]\bigr)
+D[i][j] = min(D[i][j], D[i][k] + D[k][j])
 ]
 
 Pour rendre ce calcul exploitable sur des graphes de taille plus importante, j’ai utilisé une version **par blocs** parallélisée avec **MPI**.
