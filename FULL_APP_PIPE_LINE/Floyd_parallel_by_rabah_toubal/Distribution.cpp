@@ -31,3 +31,4 @@ std::vector<BlockInfo> computeLocalBlocks(int nb_nodes, int b, int Pr, int Pc, i
     }
     return list;
 }
+     

@@ -230,7 +230,7 @@ int* ParallelFloydWarshallBlocks(int n, int* mat) {
     // Sinon je laisse MPI_Dims_create choisir automatiquement une décomposition.
 
     int dims[2] = {0, 0};
-    if (grilleCarree) {
+    if (grilleCarree) { 
         dims[0] = sqrtp;
         dims[1] = sqrtp;
     }
