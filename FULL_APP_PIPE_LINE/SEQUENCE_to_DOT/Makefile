@@ -9,7 +9,7 @@ CXXFLAGS = -O2 -std=c++17 -Wall -Wextra -pedantic
 TARGET  = build_dot
 
 # Sources
-SRCS    = BuildMatrixMPI.cpp
+SRCS    = BuildMatrixMPI.cpp ../../Needleman/needleman.cpp
 OBJS    = $(SRCS:.cpp=.o)
 
 # Règle principale

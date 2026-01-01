@@ -3,17 +3,17 @@
 
 /**
  * @file BuildMatrixMPI.cpp
- * @brief Construction parallèle de la matrice de distances de Hamming entre séquences d'ARN
+ * @brief Construction parallèle de la matrice de scores Needleman-Wunsch entre séquences d'ARN
  *        et génération d'un graphe pondéré au format DOT.
  *
  * Ce programme :
  *   - lit un fichier FASTA contenant des séquences d'ARN (rang 0),
  *   - vérifie que toutes les séquences ont la même longueur,
  *   - diffuse les séquences à tous les processus MPI,
- *   - calcule en parallèle toutes les distances de Hamming entre les séquences,
- *   - rassemble la matrice de distances sur le rang 0,
- *   - génère un graphe pondéré non orienté au format DOT (poids = distance de Hamming),
- *   - n'écrit une arête que si la distance est strictement inférieure à un seuil ε.
+ *   - calcule en parallèle tous les scores Needleman-Wunsch entre les séquences,
+ *   - rassemble la matrice des scores sur le rang 0,
+ *   - génère un graphe pondéré non orienté au format DOT (poids = score NW),
+ *   - n'écrit une arête que si le score est supérieur ou égal à un seuil.
  *
  * Le fichier DOT généré sert ensuite d'entrée à l'algorithme de Floyd–Warshall parallèle.
  */
@@ -25,6 +25,8 @@
 #include <string>
 #include <stdexcept>
 #include <algorithm>
+
+#include "../../Needleman/needleman_common.hpp"
 
 /**
  * @brief Lit un fichier FASTA "simple" et renvoie la liste des séquences.
@@ -71,26 +73,7 @@ static std::vector<std::string> readFasta(const std::string& filename) {
 }
 
 /**
- * @brief Calcule la distance de Hamming entre deux séquences de même longueur.
- *
- * La distance de Hamming est le nombre de positions i telles que a[i] != b[i].
- *
- * @param a Pointeur vers la première séquence de longueur L.
- * @param b Pointeur vers la deuxième séquence de longueur L.
- * @param L Longueur des deux séquences.
- *
- * @return La distance de Hamming entre a et b.
- */
-static int hamming(const char* a, const char* b, int L) {
-    int d = 0;
-    for (int i = 0; i < L; ++i) {
-        if (a[i] != b[i]) ++d;
-    }
-    return d;
-}
-
-/**
- * @brief Écrit un graphe pondéré non orienté au format DOT à partir d'une matrice de distances.
+ * @brief Écrit un graphe pondéré non orienté au format DOT à partir d'une matrice de scores.
  *
  * On génère un graphe de la forme :
  * @code
@@ -104,20 +87,20 @@ static int hamming(const char* a, const char* b, int L) {
  * @endcode
  *
  * Pour chaque paire (i, j) avec i < j, une arête est créée uniquement si
- * la distance d(i, j) est strictement inférieure à epsilon.
+ * le score s(i, j) est supérieur ou égal au seuil.
  *
  * @param filename Nom du fichier DOT à générer.
- * @param dist     Matrice des distances de taille n × n, stockée à plat (row-major).
+ * @param dist     Matrice des scores de taille n × n, stockée à plat (row-major).
  *                 L'élément (i, j) est à l'indice i * n + j.
  * @param n        Nombre de séquences / sommets du graphe.
- * @param epsilon  Seuil sur la distance de Hamming : on ne met une arête que si d < epsilon.
+ * @param seuil_score  Seuil sur le score NW : on met une arête si score >= seuil_score.
  *
  * @throw std::runtime_error si le fichier ne peut pas être ouvert en écriture.
  */
 static void writeDotGraph(const std::string& filename,
                           const std::vector<int>& dist,
                           int n,
-                          int epsilon)
+                          int seuil_score)
 {
     std::ofstream out(filename);
     if (!out) {
@@ -133,13 +116,13 @@ static void writeDotGraph(const std::string& filename,
     for (int i = 0; i < n; ++i) {
         out << "    A" << (i + 1) << " [label=\"" << i << "\"];\n";
     }
-    out << "\n    // Les aretes avec poids (distance de Hamming < epsilon)\n";
+    out << "\n    // Les aretes avec poids (score NW >= seuil)\n";
 
     // Arêtes non orientées : i < j
     for (int i = 0; i < n; ++i) {
         for (int j = i + 1; j < n; ++j) {
             int d = dist[i * n + j];
-            if (d < epsilon) {
+            if (d >= seuil_score) {
                 out << "    A" << (i + 1) << " -- A" << (j + 1)
                     << " [label=\"" << d << "\", weight=" << d << "];\n";
             }
@@ -150,14 +133,14 @@ static void writeDotGraph(const std::string& filename,
 }
 
 /**
- * @brief Programme principal MPI : construction de la matrice de distances et du graphe DOT.
+ * @brief Programme principal MPI : construction de la matrice de scores et du graphe DOT.
  *
  * Étapes principales :
  *   - rang 0 lit un fichier FASTA et vérifie que toutes les séquences ont la même longueur,
  *   - n (nombre de séquences) et L (longueur des séquences) sont diffusés à tous,
  *   - les séquences sont diffusées à tous les rangs sous forme de tableau contigu,
- *   - chaque rang calcule un sous-ensemble de lignes de la matrice des distances
- *     de Hamming (d(i, j) pour ses lignes i),
+ *   - chaque rang calcule un sous-ensemble de lignes de la matrice des scores
+ *     Needleman-Wunsch (s(i, j) pour ses lignes i),
  *   - le rang 0 rassemble les sous-matrices pour reconstruire la matrice n × n complète,
  *   - le rang 0 écrit un fichier DOT pondéré (utilisé ensuite par l'algorithme de Floyd–Warshall),
  *   - le temps total (calcul + rassemblement) est mesuré avec MPI_Wtime().
@@ -186,8 +169,8 @@ int main(int argc, char** argv) {
     const std::string dotFile   = "../../DATA/Resulat_sequence_by_premier_algo.dot";
 
    // Paramètre epsilon (voir énoncé, genre epsilon = 70).
-    // Si la distance de Hamming entre deux séquences est < epsilon,
-    // alors je crée une arête entre elles dans le graphe.    const int epsilon = 70;
+    // On transforme ce seuil Hamming en seuil de score NW :
+    // score >= (L - 2 * epsilon).
     const int epsilon = 70;
 
     int n = 0;       // nombre de séquences
@@ -219,7 +202,7 @@ int main(int argc, char** argv) {
 
             // Copie dans un tableau contigu n * L
               // Maintenant je recopie tout dans un grand tableau contigu n * L.
-            // Comme ça après, chaque processus peut calculer les distances
+            // Comme ça après, chaque processus peut calculer les scores
             // juste avec un &allSeqs[i * L].
             allSeqs.resize(n * L);
             for (int i = 0; i < n; ++i) {
@@ -241,6 +224,9 @@ int main(int argc, char** argv) {
     // et la longueur d’une séquence (L), que seul le rang 0 connaît au début.
     MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&L, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    ParametresNW params;
+    int seuil_score = L - 2 * epsilon;
 
 
 
@@ -274,7 +260,7 @@ int main(int argc, char** argv) {
 
 
     
-    // Chaque rang va calculer localRows lignes de la matrice des distances,
+    // Chaque rang va calculer localRows lignes de la matrice des scores,
     // donc au total localRows * n entiers. 
     std::vector<int> localDist(localRows * n);
 
@@ -287,15 +273,15 @@ int main(int argc, char** argv) {
 
         for (int j = 0; j < n; ++j) {
             const char* seq_j = &allSeqs[j * L];
-              // Distance de Hamming entre i et j.
-            // Par convention je mets 0 sur la diagonale (i == j).
-            int d = (i == j) ? 0 : hamming(seq_i, seq_j, L);
-            localDist[rowOffset + j] = d;
+            // Score Needleman-Wunsch entre i et j.
+            // Par convention je mets L sur la diagonale (i == j).
+            int s = (i == j) ? L : scoreNeedleman(seq_i, seq_j, L, L, params);
+            localDist[rowOffset + j] = s;
         }
     }
 
     // ----------------------------------------------------------
-    // Rassemblement de la matrice des distances sur le rang 0
+    // Rassemblement de la matrice des scores sur le rang 0
     // ----------------------------------------------------------
     std::vector<int> fullDist;
     if (rank == 0) {
@@ -345,11 +331,11 @@ int main(int argc, char** argv) {
     // Rang 0 : écriture du fichier .dot + affichage du temps
     // ----------------------------------------------------------
     if (rank == 0) {
-        std::cout << "\n\n>>> Temps total calcul distances + rassemblement = "
+        std::cout << "\n\n>>> Temps total calcul scores + rassemblement = "
                   << (t1 - t0) * 1000 << " millisecondes\n\n";
 
         try {
-            writeDotGraph(dotFile, fullDist, n, epsilon);
+            writeDotGraph(dotFile, fullDist, n, seuil_score);
             std::cout << "Graphe .dot ecrit dans " << dotFile << "\n";
         } catch (const std::exception& e) {
             std::cerr << "Erreur d'ecriture du fichier .dot : " << e.what() << "\n";
