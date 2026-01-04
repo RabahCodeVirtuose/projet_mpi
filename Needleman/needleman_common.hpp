@@ -8,6 +8,14 @@ struct ParametresNW {
     int gap_extend = -1;
 };
 
+inline int max2(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+inline int max3(int a, int b, int c) {
+    return max2(a, max2(b, c));
+}
+
 int scoreNeedleman(const char* a,
                    const char* b,
                    int n,

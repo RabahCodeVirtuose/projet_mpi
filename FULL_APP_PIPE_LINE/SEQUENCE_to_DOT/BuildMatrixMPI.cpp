@@ -20,12 +20,14 @@
  */
 
 #include <mpi.h>
+#include <omp.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <stdexcept>
 #include <algorithm>
+#include <cstdlib>
 
 #include "../../Needleman/needleman_common.hpp"
 
@@ -152,20 +154,29 @@ static void writeDotGraph(const std::string& filename,
  * @endcode
  *
  * @param argc Nombre d'arguments de la ligne de commande.
- * @param argv Tableau d'arguments (argv[1] doit être le fichier FASTA).
+ * @param argv Tableau d'arguments (argv[1] doit être le fichier FASTA, argv[2] = nb threads optionnel).
  *
  * @return 0 en cas de succès, une valeur non nulle si une erreur survient.
  */
 int main(int argc, char** argv) {
-    MPI_Init(&argc, &argv);
+    int provided = 0;
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    if (rank == 0) {
+        std::cout << "provided=" << provided << std::endl;
+    }
 
      // Ici je récupère le fichier FASTA en argument.
     // C'est lui qui contient toutes les séquences 
     const std::string fastaFile = argv[1];
+    int nthreads = omp_get_max_threads();
+    if (argc >= 3) {
+        nthreads = std::atoi(argv[2]);
+        if (nthreads <= 0) nthreads = 1;
+    }
         // Et je fixe le nom du fichier DOT de sortie, que je vais donner ensuite à Floyd.
     const std::string dotFile   = "../../DATA/Resulat_sequence_by_premier_algo.dot";
 
@@ -263,6 +274,7 @@ int main(int argc, char** argv) {
     // donc au total localRows * n entiers. 
     std::vector<int> localDist(localRows * n);
 
+    // Ici, la parallélisation OpenMP est dans scoreNeedlemanOMP (par alignement).
     for (int i = start; i < end; ++i) {
           // seq_i = séquence de la ligne i
         const char* seq_i = &allSeqs[i * L];
@@ -273,8 +285,13 @@ int main(int argc, char** argv) {
         for (int j = 0; j < n; ++j) {
             const char* seq_j = &allSeqs[j * L];
             // Score Needleman-Wunsch entre i et j.
-            // Puis conversion en distance : d = (L - score) / 2.
-            int s = (i == j) ? L : scoreNeedleman(seq_i, seq_j, L, L, params);
+            // Conversion en distance (meme logique que Hamming) :
+            // si les sequences ont la meme longueur L et qu'on n'utilise pas de gaps,
+            // alors score = (+1)*matches + (-1)*mismatches = L - 2*d.
+            // donc d = (L - score) / 2.
+            // Ici les gaps coutent plus cher qu'un mismatch, donc l'alignement optimal
+            // prefere en general les mismatches -> la formule reste coherente.
+            int s = (i == j) ? L : scoreNeedlemanOMP(seq_i, seq_j, L, L, params, nthreads);
             int d = (L - s) / 2;
             if (i == j) d = 0;
             localDist[rowOffset + j] = d;

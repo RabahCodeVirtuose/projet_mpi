@@ -17,7 +17,7 @@ FLOYD_EXE  = main_mpi
 PAM_EXE    = pam_mpi
 
 # Fichiers de données (chemins vus depuis la RACINE)
-FASTA      = ../../DATA/dataset_2000seq.fa         
+FASTA      = ../../DATA/dataset_500seq.fa         
 DOT_FILE   = ../../DATA/Resulat_sequence_by_premier_algo.dot
 DIST_FILE  = ../../DATA/matrice_finale_sortie_de_floyd_warshal.txt
 PAM_OUT    = ../../DATA/resultat_pam_parallel.txt
@@ -26,6 +26,11 @@ PAM_OUT    = ../../DATA/resultat_pam_parallel.txt
 NP_SEQ   ?= 6
 NP_FLOYD ?= 6
 NP_PAM   ?= 6
+
+# Nombre de threads OpenMP (Needleman) pour l'étape SEQ
+OMP_SEQ  ?= 1
+OMP_FLOYD ?= 12
+OMP_PAM   ?= 12
 
 # ============================
 # 1) Compilation
@@ -55,21 +60,21 @@ run: all
 	@echo
 	@echo "=== Étape 1 : FASTA -> DOT (build_dot) ==="
 	@echo
-	cd $(SEQ_DIR) && mpirun -np $(NP_SEQ) ./$(SEQ_EXE) $(FASTA)
+	cd $(SEQ_DIR) && OMP_NUM_THREADS=$(OMP_SEQ) mpirun -np $(NP_SEQ) ./$(SEQ_EXE) $(FASTA) $(OMP_SEQ)
 	@echo
 	@echo
 	@echo
 	@echo
 	@echo "=== Étape 2 : DOT -> matrice (Floyd) ==="
 	@echo
-	cd $(FLOYD_DIR) && mpirun -np $(NP_FLOYD) ./$(FLOYD_EXE) $(DOT_FILE)
+	cd $(FLOYD_DIR) && OMP_NUM_THREADS=$(OMP_FLOYD) mpirun -np $(NP_FLOYD) ./$(FLOYD_EXE) $(DOT_FILE)
 	@echo
 	@echo
 	@echo
 	@echo
 	@echo "=== Étape 3 : matrice -> PAM (clustering) ==="
 	@echo
-	cd $(PAM_DIR) && mpirun -np $(NP_PAM) ./$(PAM_EXE) $(DIST_FILE)
+	cd $(PAM_DIR) && OMP_NUM_THREADS=$(OMP_PAM) mpirun -np $(NP_PAM) ./$(PAM_EXE) $(DIST_FILE)
 	@echo
 	@echo
 	@echo

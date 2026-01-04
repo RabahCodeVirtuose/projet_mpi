@@ -2,33 +2,24 @@
 
 #include <cstring>
 #include <iostream>
-
-using namespace std;
+#include <omp.h>
 
 int main() {
     const char* A = "AGCT";
     const char* B = "ATGC";
 
-    int n = static_cast<int>(strlen(A));
-    int m = static_cast<int>(strlen(B));
+    int n = static_cast<int>(std::strlen(A));
+    int m = static_cast<int>(std::strlen(B));
 
     ParametresNW params;
+    double t0 = omp_get_wtime();
     int score = scoreNeedleman(A, B, n, m, params);
+    double t1 = omp_get_wtime();
 
-    cout << "Sequence A: " << A << "\n";
-    cout << "Sequence B: " << B << "\n";
-    cout << "Score Needleman: " << score << "\n";
-
-    // Affichages supplementaires (a commenter si besoin)
-    cout << "Longueur A: " << n << "\n";
-    cout << "Longueur B: " << m << "\n";
-    cout << "match=" << params.match
-         << " mismatch=" << params.mismatch
-         << " gap_open=" << params.gap_open
-         << " gap_extend=" << params.gap_extend << "\n";
-
-    // Matrices M/X/Y (a commenter si besoin)
-    afficherMatricesDebug(A, B, n, m, params);
+    std::cout << "Sequence A: " << A << "\n";
+    std::cout << "Sequence B: " << B << "\n";
+    std::cout << "Score Needleman (seq): " << score << "\n";
+    std::cout << "Temps: " << (t1 - t0) << " s\n";
 
     return 0;
 }

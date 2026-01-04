@@ -3,13 +3,13 @@
 
 # Compilateur MPI C++
 CXX     = mpic++
-CXXFLAGS = -O2 -std=c++17 -Wall -Wextra -pedantic
+CXXFLAGS = -O2 -std=c++17 -Wall -Wextra -pedantic -fopenmp
 
 # Nom de l'exécutable
 TARGET  = build_dot
 
 # Sources
-SRCS    = BuildMatrixMPI.cpp ../../Needleman/needleman.cpp
+SRCS    = BuildMatrixMPI.cpp ../../Needleman/needleman_omp.cpp ../../Needleman/needleman.cpp
 OBJS    = $(SRCS:.cpp=.o)
 
 # Règle principale

@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <graphviz/cgraph.h>
+#include <omp.h>
 
 /**
  * @file ForGraphMPI.hpp
