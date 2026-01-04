@@ -27,7 +27,6 @@
 #include <string>
 #include <stdexcept>
 #include <algorithm>
-#include <cstdlib>
 
 #include "../../Needleman/needleman_common.hpp"
 
@@ -150,11 +149,11 @@ static void writeDotGraph(const std::string& filename,
  *
  * Usage typique :
  * @code
- *   mpirun -np <nb_processus> ./build_matrix_mpi dataset_500seq.fa
+ *   OMP_NUM_THREADS=4 mpirun -np <nb_processus> ./build_matrix_mpi dataset_500seq.fa
  * @endcode
  *
  * @param argc Nombre d'arguments de la ligne de commande.
- * @param argv Tableau d'arguments (argv[1] doit être le fichier FASTA, argv[2] = nb threads optionnel).
+ * @param argv Tableau d'arguments (argv[1] doit être le fichier FASTA).
  *
  * @return 0 en cas de succès, une valeur non nulle si une erreur survient.
  */
@@ -173,10 +172,6 @@ int main(int argc, char** argv) {
     // C'est lui qui contient toutes les séquences 
     const std::string fastaFile = argv[1];
     int nthreads = omp_get_max_threads();
-    if (argc >= 3) {
-        nthreads = std::atoi(argv[2]);
-        if (nthreads <= 0) nthreads = 1;
-    }
         // Et je fixe le nom du fichier DOT de sortie, que je vais donner ensuite à Floyd.
     const std::string dotFile   = "../../DATA/Resulat_sequence_by_premier_algo.dot";
 

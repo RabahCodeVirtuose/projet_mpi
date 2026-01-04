@@ -60,7 +60,7 @@ run: all
 	@echo
 	@echo "=== Étape 1 : FASTA -> DOT (build_dot) ==="
 	@echo
-	cd $(SEQ_DIR) && OMP_NUM_THREADS=$(OMP_SEQ) mpirun -np $(NP_SEQ) ./$(SEQ_EXE) $(FASTA) $(OMP_SEQ)
+	cd $(SEQ_DIR) && OMP_NUM_THREADS=$(OMP_SEQ) mpirun -np $(NP_SEQ) ./$(SEQ_EXE) $(FASTA)
 	@echo
 	@echo
 	@echo

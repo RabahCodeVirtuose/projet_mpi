@@ -5,6 +5,7 @@
 #include <cmath>
 #include <ostream>
 #include <iostream>
+#include <omp.h>
 #include "ParallelFWBlocks.hpp"
 #include "Distribution.hpp"
 
@@ -34,16 +35,20 @@ static const int INF = 1000000000;
 // Au final, si "via" est plus petit que la distance actuelle i->j,
 // alors je mets à jour la case dans Dkk.
 static void fw_block(int* Dkk, int bs, int b) {
-    for (int kk = 0; kk < bs; ++kk) {
-        for (int i = 0; i < bs; ++i) {
-            int dik = Dkk[i * b + kk];
-            if (dik == INF) continue;
-            for (int j = 0; j < bs; ++j) {
-                int kkj = Dkk[kk * b + j];
-                if (kkj == INF) continue;
-                int via = dik + kkj;
-                int& dij = Dkk[i * b + j];
-                if (via < dij) dij = via;
+    #pragma omp parallel
+    {
+        for (int kk = 0; kk < bs; ++kk) {
+            #pragma omp for schedule(static)
+            for (int i = 0; i < bs; ++i) {
+                int dik = Dkk[i * b + kk];
+                if (dik == INF) continue;
+                for (int j = 0; j < bs; ++j) {
+                    int kkj = Dkk[kk * b + j];
+                    if (kkj == INF) continue;
+                    int via = dik + kkj;
+                    int& dij = Dkk[i * b + j];
+                    if (via < dij) dij = via;
+                }
             }
         }
     }
@@ -75,6 +80,7 @@ static void fw_block(int* Dkk, int bs, int b) {
 // En gros, cette fonction sert juste à propager la ligne du pivot
 // vers les blocs de droite dans la grille de blocs.
 static void fw_row(const int* Dkk, int* DkJ, int bs, int wJ, int b) {
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < bs; ++i) {
         for (int kk = 0; kk < bs; ++kk) {
             int dik = Dkk[i * b + kk];
@@ -119,6 +125,7 @@ static void fw_row(const int* Dkk, int* DkJ, int bs, int wJ, int b) {
 // Au final fw_col met à jour tous les blocs situés SOUS le bloc pivot,
 // en utilisant les infos du pivot pour améliorer leurs distances.
 static void fw_col(int* Dik, const int* Dkk, int hI, int bs, int b) {
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < hI; ++i) {
         for (int kk = 0; kk < bs; ++kk) {
             int ik = Dik[i * b + kk];
@@ -162,6 +169,7 @@ static void fw_col(int* Dik, const int* Dkk, int hI, int bs, int b) {
 // du carré central dans Floyd-Warshall mais en version découpée en blocs.
 static void fw_inner(const int* Dik, const int* DkJ, int* Dij, 
                      int hI, int wJ, int bs, int b) {
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < hI; ++i) {
         for (int kk = 0; kk < bs; ++kk) {
             int ik = Dik[i * b + kk];

@@ -3,7 +3,7 @@
 # ==============================
 
 CXX = mpic++
-CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -pedantic
+CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -pedantic -fopenmp
 LIBS = -lcgraph
 
 SRC = main_mpi.cpp \

@@ -1,17 +1,12 @@
 #include "needleman_common.hpp"
 
+#include <algorithm>
 #include <vector>
 #include <omp.h>
 
-int scoreNeedlemanOMP(const char* a,
-                      const char* b,
-                      int n,
-                      int m,
-                      const ParametresNW& params,
-                      int nthreads) {
-    if (nthreads <= 0) {
-        nthreads = 1;
-    }
+int scoreNeedlemanOMP(const char* a, const char* b, int n, int m,
+                      const ParametresNW& params, int nthreads) {
+    if (nthreads <= 0) nthreads = 1;
 
     const int neg_inf = -1000000000;
     const int cols = m + 1;
@@ -29,7 +24,9 @@ int scoreNeedlemanOMP(const char* a,
         Y[j] = params.gap_open + (j - 1) * params.gap_extend;
     }
 
-    #pragma omp parallel num_threads(nthreads) shared(M, X, Y, a, b, n, m, params, cols)
+    // Parcours par anti-diagonales (wavefront) classique,
+    // avec une seule région parallèle.
+    #pragma omp parallel num_threads(nthreads)
     {
         for (int d = 2; d <= n + m; ++d) {
             int i_start = d - m;

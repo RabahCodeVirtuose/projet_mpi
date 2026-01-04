@@ -1,1 +1,0 @@
-./needleman_omp ../DATA/dataset_500seq.fa 12
