@@ -9,7 +9,7 @@ OMPFLAGS = -fopenmp
 SRC = build_matrix_needleman.cpp
 TARGET = build_matrix_needleman
 
-DATASET = ../../DATA/dataset_500seq.fa
+DATASET = ../../DATA/dataset_2000seq.fa
 
 .PHONY: all clean run benchmark
 

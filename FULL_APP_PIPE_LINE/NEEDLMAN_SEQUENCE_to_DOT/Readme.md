@@ -72,7 +72,24 @@ C’est ce fichier DOT qui sera utilisé après par **Floyd–Warshall**.
 
 ---
 
-## 5. Paramètre epsilon
+## 5. Benchmark (1 thread vs plusieurs)
+
+Le Makefile contient une cible `benchmark` qui lance plusieurs executions
+avec des nombres de threads differents, pour comparer le temps sequentiel
+(1 thread) et parallele (plusieurs threads).
+
+Commande :
+
+```bash
+make benchmark
+```
+
+Par defaut, la liste des threads testes est : `1 2 4 8 12`.
+Vous pouvez modifier cette liste directement dans le Makefile si besoin.
+
+---
+
+## 6. Paramètre epsilon
 
 Dans le code, le seuil est fixé à :
 
@@ -89,7 +106,7 @@ Pour chaque paire de séquences `(i, j)` :
 
 ---
 
-## 6. Nettoyage
+## 7. Nettoyage
 
 Pour supprimer les fichiers objets / recompiler propre :
 
