@@ -77,16 +77,17 @@ Le `Makefile` exécute alors successivement :
 Si vous souhaitez modifier le nombre de processus MPI utilisés pour chaque étape, vous pouvez faire par exemple :
 
 ```bash
-make run OMP_SEQ=12 NP_FLOYD=6 OMP_FLOYD=12 NP_PAM=6
+make run OMP_SEQ=12 NP_FLOYD=4 OMP_FLOYD=3 NP_PAM=4 OMP_PAM=3
 ```
 
 Les valeurs par défaut sont fixées dans le `Makefile` via :
 
 ```make
 OMP_SEQ   ?= 12
-NP_FLOYD  ?= 6
-OMP_FLOYD ?= 12
-NP_PAM    ?= 6
+NP_FLOYD  ?= 4
+OMP_FLOYD ?= 3
+NP_PAM    ?= 4
+OMP_PAM   ?= 3 
 ```
 
 ---
