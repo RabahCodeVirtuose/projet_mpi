@@ -51,7 +51,7 @@ Exemples de fichiers :
 Pour lancer le programme avec OpenMP :
 
 ```bash
-OMP_NUM_THREADS=12 ./build_matrix_needleman ../../DATA/dataset_2000seq.fa
+OMP_NUM_THREADS=12 ./build_matrix_needleman ../DATA/dataset_2000seq.fa
 ```
 
 * `OMP_NUM_THREADS` : nombre de threads OpenMP,
