@@ -11,45 +11,56 @@
 #include <stdexcept>
 #include <sstream>
 
+using namespace std;
+
 /**
  * @brief Affiche une matrice n × m sur la sortie standard.
+ *
+ * @param tab    Pointeur vers la matrice (row-major).
+ * @param n      Nombre de lignes.
+ * @param m      Nombre de colonnes.
+ * @param format Largeur minimale d'affichage.
  */
 void affichage(const int* tab, int n, int m, int format) {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < m; ++j) {
-            std::cout << std::setw(format) << tab[i * m + j] << " ";
+            cout << setw(format) << tab[i * m + j] << " ";
         }
-        std::cout << "\n";
+        cout << "\n";
     }
 }
 
 /**
  * @brief Lit une matrice de distances carrée depuis un fichier texte.
+ *
+ * @param filename Nom du fichier à lire.
+ * @param n_out    Paramètre de sortie : taille de la matrice.
+ * @return Matrice lue (taille n_out × n_out), stockée à plat.
  */
-std::vector<int> readDistanceMatrix(const std::string& filename, int& n_out) {
-    std::ifstream in(filename);
+vector<int> readDistanceMatrix(const string& filename, int& n_out) {
+    ifstream in(filename);
     if (!in) {
-        throw std::runtime_error("Impossible d'ouvrir le fichier de distances: " + filename);
+        throw runtime_error("Impossible d'ouvrir le fichier de distances: " + filename);
     }
 
     int n, m;
     if (!(in >> n >> m)) {
-        throw std::runtime_error("Lecture de n, m echouee dans le fichier de distances");
+        throw runtime_error("Lecture de n, m echouee dans le fichier de distances");
     }
     if (n != m) {
-        std::ostringstream oss;
+        ostringstream oss;
         oss << "La matrice de distances n'est pas carree : n=" << n << ", m=" << m;
-        throw std::runtime_error(oss.str());
+        throw runtime_error(oss.str());
     }
     n_out = n;
 
-    std::vector<int> dist(n * n);
+    vector<int> dist(n * n);
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             if (!(in >> dist[i * n + j])) {
-                std::ostringstream oss;
+                ostringstream oss;
                 oss << "Erreur de lecture de la distance (" << i << "," << j << ")";
-                throw std::runtime_error(oss.str());
+                throw runtime_error(oss.str());
             }
         }
     }
@@ -59,11 +70,14 @@ std::vector<int> readDistanceMatrix(const std::string& filename, int& n_out) {
 
 /**
  * @brief Écrit un résultat PAM détaillé dans un fichier texte.
+ *
+ * @param filename Nom du fichier de sortie.
+ * @param res      Résultat PAM à écrire.
  */
-void writePAMResult(const std::string& filename, const PAMResult& res) {
-    std::ofstream out(filename);
+void writePAMResult(const string& filename, const PAMResult& res) {
+    ofstream out(filename);
     if (!out) {
-        throw std::runtime_error("Impossible d'ouvrir le fichier de resultat PAM: " + filename);
+        throw runtime_error("Impossible d'ouvrir le fichier de resultat PAM: " + filename);
     }
 
     int n = (int)res.clusterOf.size();

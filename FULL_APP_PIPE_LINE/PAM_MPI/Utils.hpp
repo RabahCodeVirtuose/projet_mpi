@@ -5,6 +5,8 @@
 #include <string>
 #include "PAM.hpp"
 
+using namespace std;
+
 /**
  * @file Utils.hpp
  * @brief Fonctions utilitaires pour l'affichage, la lecture/écriture
@@ -39,7 +41,7 @@ void affichage(const int* tab, int n, int m, int format = 4);
  *
  * @return Un vecteur de taille n*n contenant la matrice ligne par ligne.
  */
-std::vector<int> readDistanceMatrix(const std::string& filename, int& n_out);
+vector<int> readDistanceMatrix(const string& filename, int& n_out);
 
 /**
  * @brief Écrit le résultat de PAM dans un fichier texte.
@@ -63,6 +65,6 @@ std::vector<int> readDistanceMatrix(const std::string& filename, int& n_out);
  * @param filename Nom du fichier de sortie.
  * @param res      Résultat PAM à écrire.
  */
-void writePAMResult(const std::string& filename, const PAMResult& res);
+void writePAMResult(const string& filename, const PAMResult& res);
 
 #endif // UTILS_HPP
