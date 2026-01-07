@@ -41,8 +41,8 @@ Le fichier FASTA est supposé être “simple” et toutes les séquences ont la
 
 Exemples de fichiers :
 
-* `../../DATA/dataset_500seq.fa`
-* `../../DATA/dataset_2000seq.fa`
+* `../DATA/dataset_500seq.fa`
+* `../DATA/dataset_2000seq.fa`
 
 ---
 
@@ -65,7 +65,7 @@ Le programme :
 * écrit le graphe DOT dans :
 
 ```bash
-../../DATA/Resulat_sequence_by_premier_algo.dot
+../DATA/Resulat_sequence_by_premier_algo.dot
 ```
 
 C’est ce fichier DOT qui sera utilisé après par **Floyd–Warshall**.
@@ -108,7 +108,7 @@ Pour chaque paire de séquences `(i, j)` :
 
 ## 7. Nettoyage
 
-Pour supprimer les fichiers objets / recompiler propre :
+Pour supprimer les fichiers objets :
 
 ```bash
 make clean

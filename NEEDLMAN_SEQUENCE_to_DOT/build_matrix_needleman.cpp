@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
     }
 
     const string fastaFile = argv[1];
-    const string dotFile = "../../DATA/Resulat_sequence_by_premier_algo.dot";
+    const string dotFile = "../DATA/Resulat_sequence_by_premier_algo.dot";
     const int epsilon = 70;
     int nthreads = omp_get_max_threads();
 
